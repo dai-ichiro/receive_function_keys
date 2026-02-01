@@ -1,0 +1,34 @@
+{
+  "settings": {
+    "logging_enabled": false,
+    "key_hold_time": 50
+  },
+  "actions": {
+    "F13": [
+      {
+        "type": "key",
+        "value": "Alt"
+      },
+      {
+        "type": "wait",
+        "value": "300"
+      },
+      {
+        "type": "key",
+        "value": "H"
+      }
+    ],
+    "F14": [
+      {
+        "type": "key",
+        "value": "A"
+      }
+    ],
+    "F15": [
+      {
+        "type": "key",
+        "value": "B"
+      }
+    ]
+  }
+}
