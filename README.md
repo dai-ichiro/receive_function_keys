@@ -62,7 +62,7 @@ F13〜F15などのファンクションキーをフックし、あらかじめ�
 ## 開発環境
 
 - .NET Framework 4.8
-- Visual Studio 2022 (推奨)
+- Visual Studio 2026
 
 ## ビルド方法
 
