@@ -114,7 +114,22 @@ namespace receive_function_keys
             input.u.ki = new KEYBDINPUT();
             input.u.ki.wVk = (ushort)k;
             input.u.ki.dwFlags = up ? KEYEVENTF_KEYUP : 0;
+
+            if (IsExtendedKey(k))
+            {
+                input.u.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
+            }
+
             inputs.Add(input);
+        }
+
+        private static bool IsExtendedKey(Keys k)
+        {
+            return k == Keys.Up || k == Keys.Down || k == Keys.Left || k == Keys.Right ||
+                   k == Keys.Insert || k == Keys.Delete || k == Keys.Home || k == Keys.End ||
+                   k == Keys.Prior || k == Keys.Next ||
+                   k == Keys.NumLock || k == Keys.PrintScreen || k == Keys.Divide ||
+                   k == Keys.RControlKey || k == Keys.RMenu;
         }
     }
 }

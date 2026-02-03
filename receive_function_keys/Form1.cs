@@ -36,17 +36,23 @@ namespace receive_function_keys
             }
         }
 
-        private void OnGlobalKeyDown(object sender, Keys key)
+        private void OnGlobalKeyDown(object sender, GlobalKeyEventArgs e)
         {
             // Convert Keys to string (e.g., "F13")
-            string keyName = key.ToString();
+            string keyName = e.Key.ToString();
 
             if (_config.Actions.ContainsKey(keyName))
             {
-                Logger.Log($"Trigger key detected: {keyName}", _config.Settings.LoggingEnabled);
-                // Execute actions asynchronously to avoid blocking the hook
+                // Mark as handled to block the key from reaching other applications
+                e.Handled = true;
+
+                // Execute actions asynchronously to avoid blocking the hook thread
                 var actions = _config.Actions[keyName];
-                Task.Run(() => ExecuteActions(actions));
+                Task.Run(() =>
+                {
+                    Logger.Log($"Trigger key detected: {keyName}", _config.Settings.LoggingEnabled);
+                    ExecuteActions(actions);
+                });
             }
         }
 
