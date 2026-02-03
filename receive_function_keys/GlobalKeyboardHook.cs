@@ -10,11 +10,22 @@ namespace receive_function_keys
         private const int WH_KEYBOARD_LL = 13;
         private const int WM_KEYDOWN = 0x0100;
         private const int WM_SYSKEYDOWN = 0x0104;
+        private const int LLKHF_INJECTED = 0x00000010;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct KBDLLHOOKSTRUCT
+        {
+            public int vkCode;
+            public int scanCode;
+            public int flags;
+            public int time;
+            public IntPtr dwExtraInfo;
+        }
 
         private LowLevelKeyboardProc _proc;
         private IntPtr _hookID = IntPtr.Zero;
 
-        public event EventHandler<Keys> KeyDown;
+        public event EventHandler<GlobalKeyEventArgs> KeyDown;
 
         public GlobalKeyboardHook()
         {
@@ -54,11 +65,25 @@ namespace receive_function_keys
         {
             if (nCode >= 0 && (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN))
             {
-                int vkCode = Marshal.ReadInt32(lParam);
-                Keys key = (Keys)vkCode;
+                KBDLLHOOKSTRUCT hookStruct = (KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(KBDLLHOOKSTRUCT));
+
+                // Ignore injected keys to avoid loops and interference
+                if ((hookStruct.flags & LLKHF_INJECTED) != 0)
+                {
+                    return CallNextHookEx(_hookID, nCode, wParam, lParam);
+                }
+
+                Keys key = (Keys)hookStruct.vkCode;
 
                 // Fire event
-                KeyDown?.Invoke(this, key);
+                var args = new GlobalKeyEventArgs(key);
+                KeyDown?.Invoke(this, args);
+
+                if (args.Handled)
+                {
+                    // Block the key
+                    return (IntPtr)1;
+                }
             }
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
         }
@@ -79,6 +104,17 @@ namespace receive_function_keys
         public void Dispose()
         {
             Unhook();
+        }
+    }
+
+    public class GlobalKeyEventArgs : EventArgs
+    {
+        public Keys Key { get; }
+        public bool Handled { get; set; } = false;
+
+        public GlobalKeyEventArgs(Keys key)
+        {
+            this.Key = key;
         }
     }
 }
