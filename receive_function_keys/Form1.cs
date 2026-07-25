@@ -25,6 +25,7 @@ namespace receive_function_keys
             {
                 _globalKeyboardHook = new GlobalKeyboardHook();
                 _globalKeyboardHook.KeyDown += OnGlobalKeyDown;
+                _globalKeyboardHook.KeyUp += OnGlobalKeyUp;
                 _globalKeyboardHook.Hook();
                 Logger.Log("Application started. Hook initialized.", _config.Settings.LoggingEnabled);
             }
@@ -53,6 +54,18 @@ namespace receive_function_keys
                     Logger.Log($"Trigger key detected: {keyName}", _config.Settings.LoggingEnabled);
                     ExecuteActions(actions);
                 });
+            }
+        }
+
+        private void OnGlobalKeyUp(object sender, GlobalKeyEventArgs e)
+        {
+            // Convert Keys to string (e.g., "F13")
+            string keyName = e.Key.ToString();
+
+            if (_config.Actions.ContainsKey(keyName))
+            {
+                // Mark as handled to block the key Up event from reaching other applications
+                e.Handled = true;
             }
         }
 
