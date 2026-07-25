@@ -9,7 +9,9 @@ namespace receive_function_keys
     {
         private const int WH_KEYBOARD_LL = 13;
         private const int WM_KEYDOWN = 0x0100;
+        private const int WM_KEYUP = 0x0101;
         private const int WM_SYSKEYDOWN = 0x0104;
+        private const int WM_SYSKEYUP = 0x0105;
         private const int LLKHF_INJECTED = 0x00000010;
 
         [StructLayout(LayoutKind.Sequential)]
@@ -26,6 +28,7 @@ namespace receive_function_keys
         private IntPtr _hookID = IntPtr.Zero;
 
         public event EventHandler<GlobalKeyEventArgs> KeyDown;
+        public event EventHandler<GlobalKeyEventArgs> KeyUp;
 
         public GlobalKeyboardHook()
         {
@@ -63,26 +66,38 @@ namespace receive_function_keys
 
         private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if (nCode >= 0 && (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN))
+            if (nCode >= 0)
             {
-                KBDLLHOOKSTRUCT hookStruct = (KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(KBDLLHOOKSTRUCT));
+                bool isKeyDown = (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN);
+                bool isKeyUp = (wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP);
 
-                // Ignore injected keys to avoid loops and interference
-                if ((hookStruct.flags & LLKHF_INJECTED) != 0)
+                if (isKeyDown || isKeyUp)
                 {
-                    return CallNextHookEx(_hookID, nCode, wParam, lParam);
-                }
+                    KBDLLHOOKSTRUCT hookStruct = (KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(KBDLLHOOKSTRUCT));
 
-                Keys key = (Keys)hookStruct.vkCode;
+                    // Ignore injected keys to avoid loops and interference
+                    if ((hookStruct.flags & LLKHF_INJECTED) != 0)
+                    {
+                        return CallNextHookEx(_hookID, nCode, wParam, lParam);
+                    }
 
-                // Fire event
-                var args = new GlobalKeyEventArgs(key);
-                KeyDown?.Invoke(this, args);
+                    Keys key = (Keys)hookStruct.vkCode;
+                    var args = new GlobalKeyEventArgs(key);
 
-                if (args.Handled)
-                {
-                    // Block the key
-                    return (IntPtr)1;
+                    if (isKeyDown)
+                    {
+                        KeyDown?.Invoke(this, args);
+                    }
+                    else if (isKeyUp)
+                    {
+                        KeyUp?.Invoke(this, args);
+                    }
+
+                    if (args.Handled)
+                    {
+                        // Block the key
+                        return (IntPtr)1;
+                    }
                 }
             }
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
