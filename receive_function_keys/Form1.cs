@@ -88,6 +88,14 @@ namespace receive_function_keys
                         Logger.Log($"Error parsing key: {step.Value}. {ex.Message}", _config.Settings.LoggingEnabled);
                     }
                 }
+                else if (step.Type.Equals("input", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!string.IsNullOrEmpty(step.Value))
+                    {
+                        KeySender.SendText(step.Value);
+                        Logger.Log($"Action executed: SendText {step.Value}", _config.Settings.LoggingEnabled);
+                    }
+                }
                 else if (step.Type.Equals("wait", StringComparison.OrdinalIgnoreCase))
                 {
                     if (int.TryParse(step.Value, out int waitTime))
