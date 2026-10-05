@@ -54,8 +54,61 @@ namespace receive_function_keys
         }
 
         private const int INPUT_KEYBOARD = 1;
-        private const uint KEYEVENTF_KEYUP = 0x0002;
         private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
+        private const uint KEYEVENTF_KEYUP = 0x0002;
+        private const uint KEYEVENTF_UNICODE = 0x0004;
+
+        public static void SendText(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            List<INPUT> inputs = new List<INPUT>();
+            foreach (char c in text)
+            {
+                INPUT inputDown = new INPUT
+                {
+                    type = INPUT_KEYBOARD,
+                    u = new InputUnion
+                    {
+                        ki = new KEYBDINPUT
+                        {
+                            wVk = 0,
+                            wScan = c,
+                            dwFlags = KEYEVENTF_UNICODE,
+                            time = 0,
+                            dwExtraInfo = IntPtr.Zero
+                        }
+                    }
+                };
+
+                INPUT inputUp = new INPUT
+                {
+                    type = INPUT_KEYBOARD,
+                    u = new InputUnion
+                    {
+                        ki = new KEYBDINPUT
+                        {
+                            wVk = 0,
+                            wScan = c,
+                            dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
+                            time = 0,
+                            dwExtraInfo = IntPtr.Zero
+                        }
+                    }
+                };
+
+                inputs.Add(inputDown);
+                inputs.Add(inputUp);
+            }
+
+            if (inputs.Count > 0)
+            {
+                SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf(typeof(INPUT)));
+            }
+        }
 
         public static void SendKey(Keys key, int holdTimeMs = 50)
         {
