@@ -69,3 +69,10 @@ F13〜F15などのファンクションキーをフックし、あらかじめ�
 
 1. `receive_function_keys.slnx` を Visual Studio で開きます。
 2. ソリューションをビルドします。
+
+## Tips
+
+### Windowsの起動時に receive_function_keys.exe を自動実行させる方法
+
+1. Win + R を押して `shell:startup` と入力し、Enter
+2. 開いたフォルダに `receive_function_keys.exe` のショートカットを入れる
